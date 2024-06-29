@@ -229,8 +229,12 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //usleep(10*1000*1000);
 
+    node = fsSettings["showGui"];
+    bool showGui = true;
+    if(!node.empty()) showGui = static_cast<int>(fsSettings["showGui"]) != 0;
+
     //Initialize the Viewer thread and launch
-    if(bUseViewer)
+    if(showGui)
     //if(false) // TODO
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile,settings_);
