@@ -1451,6 +1451,8 @@ bool Tracking::GetStepByStep()
 
 
 
+std::ofstream poseFile("rt_trajectory.txt", std::ios::app);
+
 Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp, string filename)
 {
     //cout << "GrabImageStereo" << endl;
@@ -1513,8 +1515,28 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat 
     Track();
     //cout << "Tracking end" << endl;
 
-    return mCurrentFrame.GetPose();
+    // Obtener la pose actual
+    Sophus::SE3f Tcw = mCurrentFrame.GetPose();
+    Sophus::SE3f Twb = mCurrentFrame.GetImuPose();
+
+    // Convertir la pose a posición y orientación (cuaterniones)
+    Eigen::Vector3f translation = Twb.translation();
+    Eigen::Matrix3f rotationMatrix = Twb.rotationMatrix();
+    Eigen::Quaternionf rotation(rotationMatrix);
+
+    long long timestamp_ns = static_cast<long long>(timestamp * 1e9);
+
+    // Guardar la pose en el archivo con el formato deseado
+    if (poseFile.is_open())
+    {
+        poseFile << std::fixed << std::setprecision(6) << 1e9 * timestamp << " "
+                 << translation.x() << " " << translation.y() << " " << translation.z() << " "
+                 << rotation.w() << " " << rotation.x() << " " << rotation.y() << " " << rotation.z() << std::endl;
+    }
+
+    return Tcw;
 }
+
 
 
 Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp, string filename)
